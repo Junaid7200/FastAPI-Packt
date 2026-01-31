@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from scalar_fastapi import get_scalar_api_reference
 app = FastAPI()
 
@@ -77,6 +77,9 @@ def get_shipment_or_first(id : int | None = None):
     
     if (id):
         if id not in db:
-            return {"Error": "Wrong Id"}
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Given id does not exist"
+            )
         return db[id]
     return db[min(db.keys())]
