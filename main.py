@@ -44,14 +44,19 @@ def get_shipment():
     return db[12701]
 
 @app.post("/shipment")
-def submit_shipment(content: str, weight: float) -> dict[str, int]:
+def submit_shipment(data: dict) -> dict[str, int]:
+    content = data["content"]
+    weight = data["weight"]
+    if weight > 25:
+        raise HTTPException(
+            status_code=406,
+            detail="Maximum weight limit is 25"
+        )
     last_shipment_key = max(db.keys())
     db[last_shipment_key+1] = {"weight": weight,
         "content": content,
         }
     return {"id": last_shipment_key+1}
-
-
 
 
 # route ordering matters, define static routes before dynamic routes
