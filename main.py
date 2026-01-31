@@ -39,9 +39,19 @@ db = {
 
 
 # default route
-@app.get("/")
+@app.get("/shipment")
 def get_shipment():
-    return {"message": "Shipment service is running."}
+    return db[12701]
+
+@app.post("/shipment")
+def submit_shipment(content: str, weight: float) -> dict[str, int]:
+    last_shipment_key = max(db.keys())
+    db[last_shipment_key+1] = {"weight": weight,
+        "content": content,
+        }
+    return {"id": last_shipment_key+1}
+
+
 
 
 # route ordering matters, define static routes before dynamic routes
@@ -66,9 +76,9 @@ def get_shipments_in_range(x: int, y: int):
 
 
 # another parameterized route
-@app.get("/{id}")
+@app.get("/shipment/{id}")
 def get_shipment_by_id(id: int):
-    return {"message": f"Shipment service is running for the id: {id}."}
+    return db[id]
 
 
 # route accepting optional query params
