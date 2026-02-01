@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException, status
+from typing import Literal
 
+sort_by_type = Literal["asc", "dsc"]
 
 # some dummy data
 db = {
@@ -52,6 +54,13 @@ def getdata():
         "childHeartRate": 467
     }
 
+@app.get("/getdata/anything")
+def getdata_with_query_params(sort_by: str):
+    if sort_by not in ("asc", "dsc"):
+        raise HTTPException(status_code=400, detail="invalid sort order option selected")
+    return {"sort by that was in the query params": sort_by}
+
+
 @app.get("/getdata/{id}")
 def getdata_by_id(id: int):
     # some code to fetch that exact child by id from the database. but since our "db" is just the dict above, we can do this:
@@ -61,3 +70,5 @@ def getdata_by_id(id: int):
             detail="Given id does not exist"
         )
     return db[id]
+
+
