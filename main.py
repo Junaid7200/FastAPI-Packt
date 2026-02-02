@@ -98,3 +98,4 @@ def get_shipment_or_first(id : int | None = None):
             )
         return db[id]
     return db[min(db.keys())]
+
