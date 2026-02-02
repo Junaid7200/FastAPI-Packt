@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, status
 from typing import Literal
-
-sort_by_type = Literal["asc", "dsc"]
+from pydantic import BaseModel, Field
 
 # some dummy data
 db = {
@@ -71,4 +70,17 @@ def getdata_by_id(id: int):
         )
     return db[id]
 
+
+class SensorReading(BaseModel):
+    device_id: str = Field(min_length=3)
+    temperature_c: float
+    humidity: float
+    status: Literal["ok", "warn", "error"]
+
+@app.post("/readings")
+def create_reading(payload: SensorReading):
+    # the data validation will be done automatically now because of the pydantic modal but we can do further validation with if cases and HTTPException:
+    if payload.temperature_c < -50 or payload.temperature_c > 150:
+        raise HTTPException(status_code=400, detail="temperature out of range")
+    return {"stored": True, "data": payload}
 
