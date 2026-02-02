@@ -1,6 +1,10 @@
 from fastapi import FastAPI, HTTPException, status
 from scalar_fastapi import get_scalar_api_reference
 from typing import Any, Optional
+from schemas import shipment
+
+
+
 app = FastAPI()
 
 
@@ -71,6 +75,12 @@ def shipment_put(id: int, content: Optional[str], weight: Optional[float], statu
     return db[id]
 
 
+
+
+
+
+
+
 # patch is true partial updates
 # @app.patch("/shipment")
 # def shipment_patch(id: int, content: Optional[str] = None, weight: Optional[float] = None, status: Optional[str] = None) -> dict[str, Any]:
@@ -85,12 +95,20 @@ def shipment_put(id: int, content: Optional[str], weight: Optional[float], statu
 #     return db[id]
 
 
+
+
+
 @app.patch("/shipment")
-def shipment_patch(id: int, body: dict[str, Any]) -> dict[str, Any]:
+def shipment_patch(id: int, body: shipment) -> dict[str, Any]:
     shipment = db[id]
     shipment.update(body)
     return db[id]
 
+
+@app.delete("/shipment")
+def shipment_delete(id: int):
+    db.pop(id)
+    return db
 
 
 # route ordering matters, define static routes before dynamic routes
