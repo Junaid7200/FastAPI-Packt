@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, status
 from scalar_fastapi import get_scalar_api_reference
+from typing import Any
 app = FastAPI()
 
 
@@ -57,6 +58,15 @@ def submit_shipment(data: dict) -> dict[str, int]:
         "content": content,
         }
     return {"id": last_shipment_key+1}
+
+@app.put("/shipment")
+def shipment_update(id: int, content: str, weight: float, status: str) -> dict[str, Any]:
+    db[id] = {
+        "content": content,
+        "weight": weight,
+        "status": status
+    }
+    return db[id]
 
 
 # route ordering matters, define static routes before dynamic routes
