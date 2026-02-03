@@ -7,7 +7,7 @@ class ShipmentStatus(str, Enum):
     in_transit="in_transit"
     delivered="delivered"
 
-class shipment(BaseModel):
+class Shipment(BaseModel):
     content: str = Field(description="this field will describe the contents of the shipment in string", max_length=100)
     weight: float = Field(lt=25, ge=1)
     status: ShipmentStatus

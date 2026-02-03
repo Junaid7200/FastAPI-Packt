@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, status
 from scalar_fastapi import get_scalar_api_reference
 from typing import Any, Optional
-from schemas import shipment
+from schemas import Shipment
 
 
 
@@ -44,9 +44,17 @@ db = {
 
 
 # default route
-@app.get("/shipment")
-def get_shipment():
-    return db[12701]
+# @app.get("/shipment")
+# def get_shipment():
+#     return db[12701]
+
+
+@app.get("/shipment", response_model=Shipment)
+def get_shipment(id: int):
+    if id not in db:
+        raise HTTPException(status_code=404, detail="ID not found")
+    Shipment(**db[id])
+        
 
 @app.post("/shipment")
 def submit_shipment(data: dict) -> dict[str, int]:
@@ -99,7 +107,7 @@ def shipment_put(id: int, content: Optional[str], weight: Optional[float], statu
 
 
 @app.patch("/shipment")
-def shipment_patch(id: int, body: shipment) -> dict[str, Any]:
+def shipment_patch(id: int, body: Shipment) -> dict[str, Any]:
     shipment = db[id]
     shipment.update(body)
     return db[id]
