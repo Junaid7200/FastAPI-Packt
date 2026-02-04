@@ -4,42 +4,16 @@ from typing import Any, Optional
 from schemas import Shipment
 
 
-
 app = FastAPI()
 
 
-
 db = {
-    12701: {
-        "weight": 3.5,
-        "content": "furniture",
-        "status": "in transit"
-    },
-    12702: {
-        "weight": 1.2,
-        "content": "books",
-        "status": "delivered"
-    },
-    12703: {
-        "weight": 7.8,
-        "content": "electronics",
-        "status": "pending"
-    },
-    12704: {
-        "weight": 2.0,
-        "content": "clothes",
-        "status": "in transit"
-    },
-    12705: {
-        "weight": 5.5,
-        "content": "appliances",
-        "status": "shipped"
-    },
-    12706: {
-        "weight": 0.9,
-        "content": "toys",
-        "status": "delivered"
-    }
+    12701: {"weight": 3.5, "content": "furniture", "status": "in transit"},
+    12702: {"weight": 1.2, "content": "books", "status": "delivered"},
+    12703: {"weight": 7.8, "content": "electronics", "status": "pending"},
+    12704: {"weight": 2.0, "content": "clothes", "status": "in transit"},
+    12705: {"weight": 5.5, "content": "appliances", "status": "shipped"},
+    12706: {"weight": 0.9, "content": "toys", "status": "delivered"},
 }
 
 
@@ -54,39 +28,27 @@ def get_shipment(id: int):
     if id not in db:
         raise HTTPException(status_code=404, detail="ID not found")
     Shipment(**db[id])
-        
+
 
 @app.post("/shipment")
 def submit_shipment(data: dict) -> dict[str, int]:
     content = data["content"]
     weight = data["weight"]
     if weight > 25:
-        raise HTTPException(
-            status_code=406,
-            detail="Maximum weight limit is 25"
-        )
+        raise HTTPException(status_code=406, detail="Maximum weight limit is 25")
     last_shipment_key = max(db.keys())
-    db[last_shipment_key+1] = {"weight": weight,
+    db[last_shipment_key + 1] = {
+        "weight": weight,
         "content": content,
-        }
-    return {"id": last_shipment_key+1}
+    }
+    return {"id": last_shipment_key + 1}
 
 
 # put removes existing data and replaces it with given data
 @app.put("/shipment")
 def shipment_put(id: int, content: Optional[str], weight: Optional[float], status: Optional[str]) -> dict[str, Any]:
-    db[id] = {
-        "content": content,
-        "weight": weight,
-        "status": status
-    }
+    db[id] = {"content": content, "weight": weight, "status": status}
     return db[id]
-
-
-
-
-
-
 
 
 # patch is true partial updates
@@ -101,9 +63,6 @@ def shipment_put(id: int, content: Optional[str], weight: Optional[float], statu
 #         shipment["status"] = status
 #     db[id] = shipment
 #     return db[id]
-
-
-
 
 
 @app.patch("/shipment")
@@ -123,10 +82,8 @@ def shipment_delete(id: int):
 # documentation route
 @app.get("/scalar", include_in_schema=False)
 async def scalar_html():
-    return(get_scalar_api_reference(
-        openapi_url=app.openapi_url,
-        title="JJ API Documentation"
-    ))
+    return get_scalar_api_reference(openapi_url=app.openapi_url, title="JJ API Documentation")
+
 
 # simple static route
 @app.get("/shipment/latest")
@@ -148,14 +105,9 @@ def get_shipment_by_id(id: int):
 
 # route accepting optional query params
 @app.get("/shipment/first")
-def get_shipment_or_first(id : int | None = None):
-    
-    if (id):
+def get_shipment_or_first(id: int | None = None):
+    if id:
         if id not in db:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Given id does not exist"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Given id does not exist")
         return db[id]
     return db[min(db.keys())]
-
