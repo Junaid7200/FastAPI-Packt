@@ -73,8 +73,10 @@ def managed_db():
     db = Database()
     db.connect_to_db()
     db.create_table()
-    yield db
-    db.close()
+    try:
+        yield db
+    finally:
+        db.close()
 
 with managed_db() as db:
     print(db.get(1))
