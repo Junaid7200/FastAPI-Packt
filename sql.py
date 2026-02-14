@@ -4,7 +4,6 @@
 # from contextlib import contextmanager
 
 
-
 # class Database():
 #     def create_table(self):
 #         self.cursor.execute("""
@@ -80,14 +79,6 @@
 
 # with managed_db() as db:
 #     print(db.get(1))
-
-
-
-
-
-
-
-
 
 
 # # old practice

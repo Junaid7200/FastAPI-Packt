@@ -14,8 +14,8 @@ class ShipmentCreate(BaseModel):
 
 
 class ShipmentUpdateModel(BaseModel):
-    status: ShipmentStatus | None = Field(default=ShipmentStatus.placed)
-    estimated_delivery: datetime | None = Field(default=datetime.now())
+    status: ShipmentStatus | None = Field(default=None)
+    estimated_delivery: datetime = Field(default_factory=datetime.now)
 
 
 class ShipmentRead(BaseModel):
