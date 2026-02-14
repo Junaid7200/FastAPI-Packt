@@ -1,50 +1,71 @@
-from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, HTTPException, status
+from rich import panel, print
 from scalar_fastapi import get_scalar_api_reference
-from schemas import Shipment, ShipmentUpdateModel
-from sql import Database
+
+from database.models import Shipment
+from database.session import SessionDep, create_db_tables
+
+from schemas import ShipmentCreate, ShipmentRead, ShipmentUpdateModel
 
 
-db = Database()
+@asynccontextmanager
+async def lifespan_handler(app: FastAPI):
+    print(panel.Panel("Server is started", border_style="green"))
+    create_db_tables()
+    yield
+    print(panel.Panel("Server stopped", border_style="red"))
 
-app = FastAPI()
+
+app = FastAPI(lifespan=lifespan_handler)
 
 
-# default route
-# @app.get("/shipment")
-# def get_shipment():
-#     return db[12701]
-
-@app.get("/shipment", response_model=Shipment)
-def get_shipment(id: int):
+@app.get("/shipment/{id}", response_model=ShipmentRead)
+def get_shipment(id: int, session: SessionDep):
     print("GET query executed")
-    result = db.get(id)
+    result = session.get(Shipment, id)
     if result is None:
         print(f"There is no row in the db for the id: {id}")
         raise HTTPException(status_code=404, detail=f"The record for the given id {id} does not exist")
     return result
 
 
-@app.post("/shipment")
-def submit_shipment(data: Shipment) -> int:
+@app.post("/shipment", response_model=ShipmentRead, status_code=status.HTTP_201_CREATED)
+def submit_shipment(data: ShipmentCreate, session: SessionDep):
     print("CREATE query executed")
-    result = db.create(data)
-    print(f"New record created with the id: {result}")
-    return result
+    new_shipment = Shipment(**data.model_dump())
+    session.add(new_shipment)
+    session.commit()
+    session.refresh(new_shipment)
+    print(f"New record created with the id: {new_shipment.id}")
+    return new_shipment
 
 
+@app.patch("/shipment/{id}", response_model=ShipmentRead)
+def patch_shipment(id: int, shipment_update: ShipmentUpdateModel, session: SessionDep):
+    shipment = session.get(Shipment, id)
+    if shipment is None:
+        raise HTTPException(
+            status_code=404, detail=f"The record you are trying to UPDATE for the id: {id} does not exist"
+        )
+    update_data = shipment_update.model_dump(exclude_unset=True)
+    shipment.sqlmodel_update(update_data)
+    session.add(shipment)
+    session.commit()
+    session.refresh(shipment)
+    return shipment
 
-@app.patch("/shipment")
-def patch_shipment(id: int, shipment_status: ShipmentUpdateModel):
-    result = db.update(id, shipment_status)
-    if result is None:
-        raise HTTPException(status_code=404, detail=f"The record you are trying to UPDATE for the id: {id} does not exist")
-    return result
 
-@app.delete("/shipment")
-def shipment_delete(id: int):
-    deleted = db.delete(id)
-    if not deleted:
-        raise HTTPException(status_code=404, detail=f"The record you are trying to DELETE for the id: {id} does not exist")
+@app.delete("/shipment/{id}")
+def shipment_delete(id: int, session: SessionDep):
+    shipment = session.get(Shipment, id)
+    if shipment is None:
+        raise HTTPException(
+            status_code=404, detail=f"The record you are trying to DELETE for the id: {id} does not exist"
+        )
+    session.delete(shipment)
+    session.commit()
     return {"deleted": True, "id": id}
 
 
@@ -55,6 +76,10 @@ async def scalar_html():
     return get_scalar_api_reference(openapi_url=app.openapi_url, title="JJ API Documentation")
 
 
+# default route
+# @app.get("/shipment")
+# def get_shipment():
+#     return db[12701]
 
 # put removes existing data and replaces it with given data
 # @app.put("/shipment")
@@ -82,11 +107,6 @@ async def scalar_html():
 #     shipment = db[id]
 #     shipment.update(body)
 #     return db[id]
-
-
-
-
-
 
 
 # simple static route

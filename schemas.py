@@ -1,17 +1,27 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field
-from enum import Enum
+
+from database.models import ShipmentStatus
 
 
-class ShipmentStatus(str, Enum):
-    placed= "placed"
-    in_transit="in_transit"
-    delivered="delivered"
+class ShipmentCreate(BaseModel):
+    content: str = Field(max_length=100, description="Describes shipment content")
+    weight: float = Field(gt=1, le=25)
+    destination: int
+    status: ShipmentStatus = ShipmentStatus.placed
+    estimated_delivery: datetime = Field(default=datetime.now())
 
-class Shipment(BaseModel):
-    content: str = Field(description="this field will describe the contents of the shipment in string", max_length=100)
-    weight: float = Field(lt=25, ge=1)
-    status: ShipmentStatus = Field(default=ShipmentStatus.placed)
-    # destination: int | None = Field(default=None)
 
 class ShipmentUpdateModel(BaseModel):
-    status: ShipmentStatus = Field(default=ShipmentStatus.placed)
+    status: ShipmentStatus | None = Field(default=ShipmentStatus.placed)
+    estimated_delivery: datetime | None = Field(default=datetime.now())
+
+
+class ShipmentRead(BaseModel):
+    id: int
+    content: str
+    weight: float
+    destination: int
+    status: ShipmentStatus
+    estimated_delivery: datetime
