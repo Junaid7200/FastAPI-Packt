@@ -1,14 +1,11 @@
 import sqlite3
 from typing import Any
 from schemas import Shipment, ShipmentUpdateModel
+from contextlib import contextmanager
 
 
 
 class Database():
-    def __init__(self):
-        self.conn = sqlite3.connect("shipmentdb.db", check_same_thread=False)
-        self.cursor = self.conn.cursor()
-        self.create_table()
     def create_table(self):
         self.cursor.execute("""
                             CREATE TABLE IF NOT EXISTS shipment
@@ -56,10 +53,42 @@ class Database():
                             DELETE FROM shipment WHERE id = ?""", (id,))
         self.conn.commit()
         return self.cursor.rowcount > 0
+    def connect_to_db(self):
+            self.conn = sqlite3.connect("shipmentdb.db", check_same_thread=False)
+            self.cursor = self.conn.cursor()
     def close(self):
         self.conn.close()
-        
 
+    # def __enter__(self):
+    #     print("enter the context")
+    #     self.connect_to_db()
+    #     self.create_table()
+    #     return self
+    # def __exit__(self, *arg):
+    #     print("exiting the context")
+    #     self.close()
+
+@contextmanager
+def managed_db():
+    db = Database()
+    db.connect_to_db()
+    db.create_table()
+    yield db
+    db.close()
+
+with managed_db() as db:
+    print(db.get(1))
+
+
+
+
+
+
+
+
+
+
+# old practice
 
 # # create a table
 # cursor.execute("""CREATE TABLE IF NOT EXISTS shipment
